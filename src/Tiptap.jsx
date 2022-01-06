@@ -189,7 +189,7 @@ const Tiptap = () => {
     const deserialized = deserialize(editor.schema, markdownInput);
     editor.commands.setContent(deserialized);
     setMarkdownInput("");
-    // FIXME: setConent() doesn't trigger onUpdagte ...
+    // FIXME: setConent() doesn't trigger onUpdate ...
     setMarkdownOutput(serialize(editor.schema, editor.getJSON()));
   }
 
