@@ -22,6 +22,7 @@ import Code from "@tiptap/extension-code";
 import Bold from "@tiptap/extension-bold";
 import Blockquote from "@tiptap/extension-blockquote";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Link from "@tiptap/extension-link";
 
 const tableMap = new WeakMap();
 
@@ -51,6 +52,20 @@ export function renderOrderedList(state, node) {
   });
 }
 
+export function isPlainURL(link, parent, index, side) {
+  if (link.attrs.title || !/^\w+:/.test(link.attrs.href)) return false;
+  const content = parent.child(index + (side < 0 ? -1 : 0));
+  if (
+    !content.isText ||
+    content.text !== link.attrs.href ||
+    content.marks[content.marks.length - 1] !== link
+  )
+    return false;
+  if (index === (side < 0 ? 1 : parent.childCount - 1)) return true;
+  const next = parent.child(index + (side < 0 ? -2 : 1));
+  return !link.isInSet(next.marks);
+}
+
 const serializerMarks = {
   ...defaultMarkdownSerializer.marks,
   [Bold.name]: defaultMarkdownSerializer.marks.strong,
@@ -67,6 +82,20 @@ const serializerMarks = {
     expelEnclosingWhitespace: true,
   },
   [Code.name]: defaultMarkdownSerializer.marks.code,
+  [Link.name]: {
+    open(state, mark, parent, index) {
+      return isPlainURL(mark, parent, index, 1) ? "<" : "[";
+    },
+    close(state, mark, parent, index) {
+      const href = mark.attrs.canonicalSrc || mark.attrs.href;
+
+      return isPlainURL(mark, parent, index, -1)
+        ? ">"
+        : `](${state.esc(href)}${
+            mark.attrs.title ? ` ${state.quote(mark.attrs.title)}` : ""
+          })`;
+    },
+  },
 };
 
 const serializerNodes = {
@@ -139,26 +168,14 @@ const Tiptap = () => {
       CodeBlockLowlight.configure({
         lowlight,
       }),
+      Link,
     ],
     // content: "<h1>This is a heading</h1>\n<p>This is a paragraph</p>",
     content: `
-        <p>
-          That’s a boring paragraph followed by a fenced code block:
-        </p>
-        <pre><code class="language-javascript">for (var i=1; i <= 20; i++)
-{
-  if (i % 15 == 0)
-    console.log("FizzBuzz");
-  else if (i % 3 == 0)
-    console.log("Fizz");
-  else if (i % 5 == 0)
-    console.log("Buzz");
-  else
-    console.log(i);
-}</code></pre>
-        <p>
-          Press Command/Ctrl + Enter to leave the fenced code block and continue typing in boring paragraphs.
-        </p>
+      <h1>This is heading</h1>
+      <h3>This is sub-heading</h3>
+      <a href="https://github.com/justinmoon/tiptap-markdown-demo">Link to this repo</a>
+      <p>TipTap is <s>Vue-only</s> <strong>powerful</strong> and <em>configurable</em> editor framework.</p>
       `,
     onCreate({ editor }) {
       setMarkdownOutput(serialize(editor.schema, editor.getJSON()));
@@ -185,14 +202,11 @@ const Tiptap = () => {
         <textarea
           className="input"
           value={markdownInput}
+          rows={6}
           onChange={(e) => setMarkdownInput(e.target.value)}
         ></textarea>
         <div className="flex">
-          <button
-            // style={{ marginLeft: "auto", marginRight: 0 }}
-            className="button"
-            onClick={loadMarkdownInput}
-          >
+          <button className="button" onClick={loadMarkdownInput}>
             Load
           </button>
         </div>

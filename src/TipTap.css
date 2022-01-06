@@ -13,7 +13,11 @@
   width: 100%;
   max-width: 100%;
   border-color: black;
-  padding-right: -500px;
+}
+
+.ProseMirror,
+textarea:focus {
+  outline: 0;
 }
 
 .button {
