@@ -47,6 +47,10 @@ textarea:focus {
   display: flex;
 }
 
+.pre-wrap {
+  white-space: pre-wrap;
+}
+
 .ProseMirror {
   > * + * {
     margin-top: 0.75em;

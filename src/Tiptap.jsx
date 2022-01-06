@@ -212,7 +212,7 @@ const Tiptap = () => {
         </div>
       </div>
       <h3 className="heading">TipTap → Markdown</h3>
-      <pre className="section">{markdownOutput}</pre>
+      <pre className="section pre-wrap">{markdownOutput}</pre>
     </div>
   );
 };
